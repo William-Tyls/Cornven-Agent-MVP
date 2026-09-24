@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "topic": "demo",
+      "canonical": "演示",
+      "aliases": ["demo", "demonstration"],
+      "context": [],
+      "sourceId": "public-demo",
+      "locator": "Demo scope / 演示范围",
+      "note": "Synthetic public demo vocabulary; not derived from customer documents."
+    }
+  ]
+}

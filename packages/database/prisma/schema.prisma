@@ -1,0 +1,640 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  STAFF
+}
+
+enum ImportSource {
+  MOCK
+  CSV
+  POS_API
+  POS_DATABASE
+}
+
+enum ImportStatus {
+  UPLOADED
+  VALIDATING
+  VALIDATED
+  IMPORTED
+  FAILED
+}
+
+enum RawRecordStatus {
+  RECEIVED
+  VALID
+  INVALID
+  NORMALIZED
+}
+
+enum RawRecordType {
+  SALE
+  REFUND
+  EXCHANGE
+}
+
+enum CommissionRateSource {
+  RENTAL
+}
+
+enum RuleStatus {
+  DRAFT
+  ACTIVE
+  RETIRED
+}
+
+enum SettlementStatus {
+  DRAFT
+  CALCULATED
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  LOCKED
+  EXPORTED
+}
+
+enum ApprovalAction {
+  SUBMIT
+  APPROVE
+  REJECT
+}
+
+enum DeliveryStatus {
+  DRAFT
+  READY
+  SENT
+  FAILED
+}
+
+model User {
+  id          String          @id @default(uuid())
+  email       String          @unique
+  displayName String
+  role        UserRole        @default(STAFF)
+  approvals   ApprovalEvent[]
+  auditEvents AuditEvent[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model Artist {
+  id                String                  @id @default(uuid())
+  externalRef       String?                 @unique
+  name              String
+  brandName         String?
+  products          Product[]
+  rentals           Rental[]
+  sales             Sale[]
+  settlementRuns    SettlementRun[]
+  deliveryProfile   ArtistDeliveryProfile?
+  monthlyDeliveries MonthlyReportDelivery[]
+  monthlyReports    ArtistMonthlyReport[]
+  reportTasks       ReportGenerationTask[]
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+}
+
+model Venue {
+  id                 String              @id @default(uuid())
+  externalRef        String?             @unique
+  name               String
+  timezone           String              @default("Asia/Taipei")
+  rentals            Rental[]
+  sales              Sale[]
+  inventorySnapshots InventorySnapshot[]
+  settlementRuns     SettlementRun[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+}
+
+model Product {
+  id                 String              @id @default(uuid())
+  externalRef        String?             @unique
+  artistId           String
+  artist             Artist              @relation(fields: [artistId], references: [id])
+  sku                String?
+  name               String
+  sales              Sale[]
+  inventorySnapshots InventorySnapshot[]
+  settlementLines    SettlementLine[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@unique([artistId, sku])
+  @@index([artistId])
+}
+
+model ImportBatch {
+  id             String         @id @default(uuid())
+  source         ImportSource
+  status         ImportStatus   @default(UPLOADED)
+  sourceFileName String?
+  checksum       String         @unique
+  totalRows      Int            @default(0)
+  validRows      Int            @default(0)
+  invalidRows    Int            @default(0)
+  metadata       Json?
+  rawRecords     RawPosRecord[]
+  sales          Sale[]
+  errors         ImportError[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model RawPosRecord {
+  id                    String          @id @default(uuid())
+  importBatchId         String
+  importBatch           ImportBatch     @relation(fields: [importBatchId], references: [id], onDelete: Cascade)
+  sourceRecordId        String
+  sourceTransactionId   String
+  parentTransactionId   String?
+  recordType            RawRecordType
+  canonicalSaleId       String?
+  canonicalSale         Sale?           @relation(fields: [canonicalSaleId], references: [id], onDelete: SetNull)
+  quantity              Int?
+  unitPriceCents        BigInt?
+  totalAmountCents      BigInt?
+  commissionAmountCents BigInt?
+  tenantAmountCents     BigInt?
+  rentalExternalRef     String?
+  cubeExternalRef       String?
+  rentalRateRaw         String?
+  cubeRateRaw           String?
+  checksum              String
+  rawPayload            Json
+  status                RawRecordStatus @default(RECEIVED)
+  occurredAt            DateTime?
+  createdAt             DateTime        @default(now())
+
+  @@unique([importBatchId, sourceRecordId])
+  @@unique([importBatchId, checksum])
+  @@index([sourceTransactionId])
+  @@index([parentTransactionId])
+  @@index([canonicalSaleId])
+}
+
+model ImportError {
+  id            String      @id @default(uuid())
+  importBatchId String
+  importBatch   ImportBatch @relation(fields: [importBatchId], references: [id], onDelete: Cascade)
+  rowNumber     Int?
+  field         String?
+  code          String
+  message       String
+  rawValue      Json?
+  createdAt     DateTime    @default(now())
+
+  @@index([importBatchId])
+}
+
+model Rental {
+  id              String                  @id @default(uuid())
+  externalRef     String                  @unique
+  artistId        String
+  artist          Artist                  @relation(fields: [artistId], references: [id])
+  venueId         String
+  venue           Venue                   @relation(fields: [venueId], references: [id])
+  cubeExternalRef String?
+  commissionBps   Int
+  fixedRentCents  Int?
+  effectiveFrom   DateTime
+  effectiveTo     DateTime?
+  sales           Sale[]
+  ruleVersions    SettlementRuleVersion[]
+  settlementRuns  SettlementRun[]
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  @@index([artistId, effectiveFrom, effectiveTo])
+  @@index([venueId, effectiveFrom, effectiveTo])
+}
+
+model Sale {
+  id                          String         @id @default(uuid())
+  dedupeKey                   String         @unique
+  sourceRecordId              String
+  sourceTransactionId         String
+  importBatchId               String
+  importBatch                 ImportBatch    @relation(fields: [importBatchId], references: [id])
+  rawRecords                  RawPosRecord[]
+  artistId                    String
+  artist                      Artist         @relation(fields: [artistId], references: [id])
+  venueId                     String
+  venue                       Venue          @relation(fields: [venueId], references: [id])
+  productId                   String
+  product                     Product        @relation(fields: [productId], references: [id])
+  rentalId                    String
+  rental                      Rental         @relation(fields: [rentalId], references: [id])
+  cubeExternalRef             String?
+  recordType                  RawRecordType  @default(SALE)
+  parentSaleId                String?
+  parentSale                  Sale?          @relation("SaleAdjustments", fields: [parentSaleId], references: [id])
+  adjustments                 Sale[]         @relation("SaleAdjustments")
+  soldAt                      DateTime
+  quantitySold                Int
+  unitPriceCents              BigInt
+  grossSalesCents             BigInt
+  refundAmountCents           BigInt         @default(0)
+  sourceCommissionAmountCents BigInt
+  sourceTenantAmountCents     BigInt
+  rentalCommissionBps         Int
+  cubeCommissionBps           Int?
+  currency                    String
+  createdAt                   DateTime       @default(now())
+  updatedAt                   DateTime       @updatedAt
+
+  @@index([artistId, soldAt])
+  @@index([venueId, soldAt])
+  @@index([productId, soldAt])
+  @@index([rentalId, soldAt])
+  @@index([sourceTransactionId])
+  @@index([parentSaleId])
+}
+
+model InventorySnapshot {
+  id         String   @id @default(uuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  venueId    String
+  venue      Venue    @relation(fields: [venueId], references: [id])
+  capturedAt DateTime
+  quantity   Int
+  createdAt  DateTime @default(now())
+
+  @@unique([productId, venueId, capturedAt])
+  @@index([venueId, capturedAt])
+}
+
+model SettlementRuleVersion {
+  id                  String               @id @default(uuid())
+  rentalId            String
+  rental              Rental               @relation(fields: [rentalId], references: [id])
+  version             Int
+  rentalCommissionBps Int
+  rateSource          CommissionRateSource @default(RENTAL)
+  effectiveFrom       DateTime
+  effectiveTo         DateTime?
+  status              RuleStatus           @default(DRAFT)
+  settlementRuns      SettlementRun[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  @@unique([rentalId, version])
+  @@index([rentalId, effectiveFrom, effectiveTo])
+}
+
+model SettlementRun {
+  id                              String                @id @default(uuid())
+  artistId                        String
+  artist                          Artist                @relation(fields: [artistId], references: [id])
+  venueId                         String
+  venue                           Venue                 @relation(fields: [venueId], references: [id])
+  rentalId                        String
+  rental                          Rental                @relation(fields: [rentalId], references: [id])
+  ruleVersionId                   String
+  ruleVersion                     SettlementRuleVersion @relation(fields: [ruleVersionId], references: [id])
+  rateSource                      CommissionRateSource  @default(RENTAL)
+  rentalCommissionBps             Int
+  periodStart                     DateTime
+  periodEnd                       DateTime
+  businessTimezone                String                @default("Asia/Taipei")
+  inputSnapshotRef                String
+  status                          SettlementStatus      @default(DRAFT)
+  isProvisional                   Boolean               @default(false)
+  supersedesRunId                 String?               @unique
+  supersedesRun                   SettlementRun?        @relation("SettlementSupersession", fields: [supersedesRunId], references: [id])
+  supersededBy                    SettlementRun?        @relation("SettlementSupersession")
+  totalSalesCents                 BigInt
+  refundAmountCents               BigInt
+  netSalesCents                   BigInt
+  sourceCommissionAmountCents     BigInt
+  sourceTenantAmountCents         BigInt
+  calculatedCommissionAmountCents BigInt
+  calculatedTenantAmountCents     BigInt
+  commissionDifferenceCents       BigInt
+  tenantDifferenceCents           BigInt
+  amountPayableCents              BigInt
+  bankTransferFeeCents            BigInt                @default(0)
+  finalTransferAmountCents        BigInt?
+  requiresReview                  Boolean               @default(false)
+  currency                        String
+  lines                           SettlementLine[]
+  approvalEvents                  ApprovalEvent[]
+  deliveries                      ReportDelivery[]
+  createdAt                       DateTime              @default(now())
+  updatedAt                       DateTime              @updatedAt
+
+  @@index([artistId, periodStart, periodEnd])
+  @@index([rentalId, periodStart, periodEnd])
+  @@index([status])
+}
+
+enum ReportStatus {
+  DRAFT
+  REQUIRES_REVIEW
+}
+
+enum ReportTaskStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+model ArtistMonthlyReport {
+  id              String                   @id @default(uuid())
+  artistId        String
+  artist          Artist                   @relation(fields: [artistId], references: [id])
+  settlementMonth String
+  asOf            DateTime
+  generatedAt     DateTime                 @default(now())
+  trigger         String
+  version         Int                      @default(1)
+  isProvisional   Boolean
+  reportStatus    ReportStatus             @default(DRAFT)
+  schemaVersion   String
+  reportJson      Json
+  deliveries      MonthlyReportDelivery[]
+  approval        MonthlyReportApproval?
+  inputSnapshot   SettlementInputSnapshot?
+  artifacts       ReportArtifact[]
+  tasks           ReportGenerationTask[]
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  @@unique([artistId, settlementMonth, version])
+  @@index([artistId, settlementMonth])
+}
+
+model SettlementInputSnapshot {
+  id           String              @id @default(uuid())
+  reportId     String              @unique
+  report       ArtistMonthlyReport @relation(fields: [reportId], references: [id])
+  m3InputJson  Json
+  m3OutputJson Json
+  createdAt    DateTime            @default(now())
+}
+
+model ReportArtifact {
+  id           String              @id @default(uuid())
+  reportId     String
+  report       ArtistMonthlyReport @relation(fields: [reportId], references: [id])
+  storageKey   String              @unique
+  fileName     String
+  mimeType     String
+  byteSize     Int
+  sha256       String
+  createdAt    DateTime            @default(now())
+  expiresAt    DateTime
+  deletedAt    DateTime?
+  deleteReason String?
+
+  @@index([reportId])
+}
+
+model ReportGenerationTask {
+  id                 String               @id @default(uuid())
+  reportId           String?
+  report             ArtistMonthlyReport? @relation(fields: [reportId], references: [id])
+  artistId           String
+  artist             Artist               @relation(fields: [artistId], references: [id])
+  actorId            String               @default("local")
+  requestFingerprint String               @default("")
+  settlementMonth    String
+  asOf               DateTime
+  trigger            String
+  idempotencyKey     String?              @unique
+  status             ReportTaskStatus     @default(QUEUED)
+  attemptCount       Int                  @default(0)
+  nextRetryAt        DateTime?
+  errorCode          String?
+  errorMessage       String?
+  leaseToken         String?
+  leaseExpiresAt     DateTime?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@index([status, nextRetryAt])
+}
+
+// A separate, single-purpose lock for scheduled (automatic) tasks only.
+// Manual requests dedupe via ReportGenerationTask.idempotencyKey instead;
+// this table exists because PostgreSQL/Prisma unique constraints treat
+// every NULL as distinct, so a shared constraint keyed on a
+// possibly-null idempotencyKey would not reliably prevent duplicate
+// scheduled tasks for the same artist+month.
+model ScheduledReportLock {
+  id              String   @id @default(uuid())
+  artistId        String
+  settlementMonth String
+  taskId          String   @unique
+  createdAt       DateTime @default(now())
+
+  @@unique([artistId, settlementMonth])
+}
+
+model SettlementLine {
+  id                              String        @id @default(uuid())
+  settlementRunId                 String
+  settlementRun                   SettlementRun @relation(fields: [settlementRunId], references: [id], onDelete: Cascade)
+  productId                       String?
+  product                         Product?      @relation(fields: [productId], references: [id])
+  sku                             String?
+  productName                     String
+  quantitySold                    Int
+  grossSalesCents                 BigInt
+  refundAmountCents               BigInt
+  netSalesCents                   BigInt
+  sourceCommissionAmountCents     BigInt
+  sourceTenantAmountCents         BigInt
+  calculatedCommissionAmountCents BigInt
+  calculatedTenantAmountCents     BigInt
+  commissionDifferenceCents       BigInt
+  tenantDifferenceCents           BigInt
+
+  @@index([settlementRunId])
+}
+
+model ApprovalEvent {
+  id              String         @id @default(uuid())
+  settlementRunId String
+  settlementRun   SettlementRun  @relation(fields: [settlementRunId], references: [id])
+  actorId         String
+  actor           User           @relation(fields: [actorId], references: [id])
+  action          ApprovalAction
+  reason          String?
+  requestId       String
+  createdAt       DateTime       @default(now())
+
+  @@index([settlementRunId, createdAt])
+}
+
+model ReportDelivery {
+  id              String         @id @default(uuid())
+  settlementRunId String
+  settlementRun   SettlementRun  @relation(fields: [settlementRunId], references: [id])
+  recipient       String
+  status          DeliveryStatus @default(DRAFT)
+  fileChecksum    String?
+  sentAt          DateTime?
+  errorMessage    String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([settlementRunId])
+}
+
+model Document {
+  id              String          @id @default(uuid())
+  sourceId        String          @unique
+  title           String
+  sourceType      String
+  sourceUrl       String
+  businessVersion String?
+  contentStatus   String
+  audience        String
+  retrievalStatus String          @default("active")
+  checksum        String          @unique
+  permissionTags  String[]
+  indexedAt       DateTime        @default(now())
+  chunks          DocumentChunk[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model DocumentChunk {
+  id                  String                       @id @default(uuid())
+  documentId          String
+  document            Document                     @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  ordinal             Int
+  headingPath         String[]
+  content             String
+  locator             String
+  checksum            String
+  embeddingModel      String
+  embeddingDimensions Int
+  embedding           Unsupported("vector(1024)")?
+  createdAt           DateTime                     @default(now())
+
+  @@unique([documentId, ordinal])
+  @@unique([documentId, checksum])
+}
+
+model AuditEvent {
+  id         String   @id @default(uuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+  actorType  String
+  module     String
+  action     String
+  entityType String?
+  entityId   String?
+  requestId  String
+  result     String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([requestId])
+  @@index([entityType, entityId])
+}
+
+model ReportScheduleCheckpoint {
+  settlementMonth String   @id
+  artistCursor    String?
+  enumerated      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Approval is bound to one immutable monthly report version, independently of its draft PDF.
+enum MonthlyApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model MonthlyReportApproval {
+  reportId  String                       @id
+  report    ArtistMonthlyReport          @relation(fields: [reportId], references: [id])
+  status    MonthlyApprovalStatus        @default(PENDING)
+  createdAt DateTime                     @default(now())
+  updatedAt DateTime                     @updatedAt
+  events    MonthlyReportApprovalEvent[]
+
+  @@index([status, updatedAt])
+}
+
+model MonthlyReportApprovalEvent {
+  id        String                @id @default(uuid())
+  reportId  String
+  approval  MonthlyReportApproval @relation(fields: [reportId], references: [reportId])
+  action    ApprovalAction
+  actorId   String
+  reason    String?
+  requestId String
+  createdAt DateTime              @default(now())
+
+  @@unique([reportId, requestId])
+  @@index([reportId, createdAt])
+}
+
+enum MonthlyDeliveryStatus {
+  QUEUED
+  SENDING
+  SENT
+  FAILED
+  UNKNOWN
+  SKIPPED
+}
+
+model ArtistDeliveryProfile {
+  artistId         String   @id
+  artist           Artist   @relation(fields: [artistId], references: [id])
+  recipientEmail   String?
+  automaticEnabled Boolean  @default(false)
+  updatedBy        String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model MonthlyDeliveryBatch {
+  month       String    @id
+  scheduledAt DateTime
+  enumerated  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+}
+
+model MonthlyReportDelivery {
+  id              String                @id @default(uuid())
+  artistId        String
+  artist          Artist                @relation(fields: [artistId], references: [id])
+  reportId        String?
+  report          ArtistMonthlyReport?  @relation(fields: [reportId], references: [id])
+  settlementMonth String
+  recipientEmail  String?
+  trigger         String
+  mode            String
+  status          MonthlyDeliveryStatus @default(QUEUED)
+  dedupeKey       String                @unique
+  scheduleKey     String?               @unique
+  actorId         String
+  attemptCount    Int                   @default(0)
+  messageId       String?
+  pdfChecksum     String?
+  sentAt          DateTime?
+  claimedAt       DateTime?
+  errorCode       String?
+  errorMessage    String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  @@index([status, createdAt])
+  @@index([artistId, settlementMonth])
+}

@@ -1,0 +1,12 @@
+{
+  "request": {
+    "message": "Who are some influential modern artists?"
+  },
+  "response": {
+    "requestId": "REQ-GENERAL-001",
+    "answer": "This is general information rather than Cornven internal guidance. Influential modern artists include Vincent van Gogh, Pablo Picasso, Frida Kahlo, and Georgia O'Keeffe.",
+    "citations": [],
+    "toolCalls": [],
+    "outcome": "answered"
+  }
+}

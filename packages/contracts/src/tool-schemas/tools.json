@@ -1,0 +1,1186 @@
+[
+  {
+    "name": "sales.search",
+    "description": "Search permission-filtered canonical sales records.",
+    "readOnly": true,
+    "owner": "A2",
+    "input": {
+      "type": "object",
+      "required": ["artistId"],
+      "properties": {
+        "artistId": {
+          "type": "string"
+        },
+        "rentalId": {
+          "type": "string"
+        },
+        "periodStart": {
+          "type": "string",
+          "format": "date"
+        },
+        "periodEnd": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "required": [
+        "recordCount",
+        "grossSalesCents",
+        "refundAmountCents",
+        "netSalesCents",
+        "sourceCommissionAmountCents",
+        "sourceTenantAmountCents",
+        "currency",
+        "records"
+      ],
+      "properties": {
+        "recordCount": {
+          "type": "integer"
+        },
+        "grossSalesCents": {
+          "type": "integer"
+        },
+        "refundAmountCents": {
+          "type": "integer"
+        },
+        "netSalesCents": {
+          "type": "integer"
+        },
+        "sourceCommissionAmountCents": {
+          "type": "integer"
+        },
+        "sourceTenantAmountCents": {
+          "type": "integer"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "recordType",
+              "rentalId",
+              "soldAt",
+              "grossSalesCents",
+              "sourceCommissionAmountCents",
+              "sourceTenantAmountCents",
+              "currency"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "recordType": {
+                "type": "string",
+                "enum": ["SALE", "REFUND"]
+              },
+              "rentalId": {
+                "type": "string"
+              },
+              "soldAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "grossSalesCents": {
+                "type": "integer"
+              },
+              "sourceCommissionAmountCents": {
+                "type": "integer"
+              },
+              "sourceTenantAmountCents": {
+                "type": "integer"
+              },
+              "currency": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "artist.get",
+    "description": "Get an artist's POS-backed profile and active Rental rule references.",
+    "readOnly": true,
+    "owner": "A2",
+    "input": {
+      "type": "object",
+      "required": ["artistId"],
+      "properties": {
+        "artistId": {
+          "type": "string"
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "required": ["artistId", "name", "activeRentals"],
+      "properties": {
+        "artistId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "activeRentals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "rentalId",
+              "venueId",
+              "commissionBps",
+              "fixedRentCents",
+              "effectiveFrom",
+              "effectiveTo"
+            ],
+            "properties": {
+              "rentalId": {
+                "type": "string"
+              },
+              "venueId": {
+                "type": "string"
+              },
+              "commissionBps": {
+                "type": "integer"
+              },
+              "effectiveFrom": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "effectiveTo": {
+                "type": ["string", "null"],
+                "format": "date-time"
+              },
+              "fixedRentCents": {
+                "type": ["integer", "null"]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "settlement.preview",
+    "description": "Read current database data for an artist and month and calculate a settlement preview. Uses POST /api/v1/assistant/tools/settlement.preview. Does not save reports or approvals. Current month is month-to-date in Asia/Taipei; future months are rejected. Unknown fees and payable amounts remain null.",
+    "readOnly": true,
+    "owner": "B3",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artistId", "settlementMonth"],
+      "properties": {
+        "artistId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "settlementMonth": {
+          "type": "string",
+          "pattern": "^[2-9]\\d{3}-(?:0[1-9]|1[0-2])$"
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artistId",
+        "settlementMonth",
+        "calculatedAt",
+        "dataCutoff",
+        "readOnly",
+        "result"
+      ],
+      "properties": {
+        "artistId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "settlementMonth": {
+          "type": "string",
+          "pattern": "^[2-9]\\d{3}-(?:0[1-9]|1[0-2])$"
+        },
+        "calculatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "dataCutoff": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "readOnly": {
+          "type": "boolean",
+          "enum": [true]
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "totalProductSalesCents",
+            "refundsCents",
+            "validSalesCents",
+            "creatorRevenueShareAmountCents",
+            "settlementMonth",
+            "creator",
+            "venues",
+            "settlementPeriod",
+            "currency",
+            "businessTimezone",
+            "isProvisional",
+            "rentals",
+            "bankTransferFeeCents",
+            "amountPayableToCreatorCents",
+            "monthlyProductSalesDetails",
+            "lowStockReminder",
+            "notes"
+          ],
+          "properties": {
+            "totalProductSalesCents": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "refundsCents": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "validSalesCents": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "creatorRevenueShareAmountCents": {
+              "type": ["integer", "null"],
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "settlementMonth": {
+              "type": "string",
+              "pattern": "^(0[1-9]|1[0-2])\\/\\d{4}$"
+            },
+            "creator": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["artistId", "artistName", "brandName"],
+              "properties": {
+                "artistId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                },
+                "artistName": {
+                  "type": ["string", "null"],
+                  "minLength": 1
+                },
+                "brandName": {
+                  "type": ["string", "null"],
+                  "minLength": 1
+                }
+              }
+            },
+            "venues": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["venueId", "venueName"],
+                "properties": {
+                  "venueId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "venueName": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            },
+            "settlementPeriod": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["from", "to", "asOf"],
+              "properties": {
+                "from": {
+                  "type": "string"
+                },
+                "to": {
+                  "type": "string"
+                },
+                "asOf": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "currency": {
+              "type": "string",
+              "enum": ["TWD"]
+            },
+            "businessTimezone": {
+              "type": "string",
+              "enum": ["Asia/Taipei"]
+            },
+            "isProvisional": {
+              "type": "boolean"
+            },
+            "rentals": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "totalProductSalesCents",
+                  "refundsCents",
+                  "validSalesCents",
+                  "creatorRevenueShareAmountCents",
+                  "rentalId",
+                  "venueId",
+                  "venueName",
+                  "rentalAmountCents",
+                  "revenueShares"
+                ],
+                "properties": {
+                  "totalProductSalesCents": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "refundsCents": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "validSalesCents": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "creatorRevenueShareAmountCents": {
+                    "type": ["integer", "null"],
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "rentalId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "venueId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "venueName": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "rentalAmountCents": {
+                    "type": ["integer", "null"],
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "revenueShares": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "totalProductSalesCents",
+                        "refundsCents",
+                        "validSalesCents",
+                        "creatorRevenueShareAmountCents",
+                        "creatorCommissionBps",
+                        "platformCommissionBps"
+                      ],
+                      "properties": {
+                        "totalProductSalesCents": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "refundsCents": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "validSalesCents": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "creatorRevenueShareAmountCents": {
+                          "type": ["integer", "null"],
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "creatorCommissionBps": {
+                          "type": ["integer", "null"],
+                          "minimum": 0,
+                          "maximum": 10000
+                        },
+                        "platformCommissionBps": {
+                          "type": ["integer", "null"],
+                          "minimum": 0,
+                          "maximum": 10000
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "bankTransferFeeCents": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "amountPayableToCreatorCents": {
+              "type": ["integer", "null"],
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "monthlyProductSalesDetails": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "productId",
+                  "productName",
+                  "sku",
+                  "rentalId",
+                  "venueId",
+                  "unitPriceCents",
+                  "quantitySold",
+                  "salesAmountCents"
+                ],
+                "properties": {
+                  "productId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "productName": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sku": {
+                    "type": ["string", "null"],
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "rentalId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "venueId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "unitPriceCents": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "quantitySold": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "salesAmountCents": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                }
+              }
+            },
+            "lowStockReminder": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["status", "capturedAt", "products", "message"],
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": ["available", "unavailable"]
+                },
+                "capturedAt": {
+                  "type": ["string", "null"],
+                  "format": "date-time"
+                },
+                "products": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "productId",
+                      "productName",
+                      "sku",
+                      "venueId",
+                      "venueName",
+                      "currentStock",
+                      "monthlyQuantitySold"
+                    ],
+                    "properties": {
+                      "productId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                      },
+                      "productName": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "sku": {
+                        "type": ["string", "null"],
+                        "minLength": 1,
+                        "maxLength": 120
+                      },
+                      "venueId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                      },
+                      "venueName": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "currentStock": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "monthlyQuantitySold": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    }
+                  }
+                },
+                "message": {
+                  "type": ["string", "null"],
+                  "minLength": 1
+                }
+              }
+            },
+            "notes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "settlement.get",
+    "description": "Plan B: read the latest ready saved monthly report by artistId and settlementMonth using POST /api/v1/assistant/tools/settlement.get. Returns report:null when absent. Does not recalculate, create a report or infer approval status.",
+    "readOnly": true,
+    "owner": "B3/B4",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artistId", "settlementMonth"],
+      "properties": {
+        "artistId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "settlementMonth": {
+          "type": "string",
+          "pattern": "^[2-9]\\d{3}-(?:0[1-9]|1[0-2])$"
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["report"],
+      "properties": {
+        "report": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": [
+            "reportId",
+            "generatedAt",
+            "language",
+            "reportStatus",
+            "settlementMonth",
+            "settlementPeriod",
+            "creator",
+            "currency",
+            "businessTimezone",
+            "isProvisional",
+            "financialSummary",
+            "rentals",
+            "monthlyProductSalesDetails",
+            "lowStockReminder",
+            "notes"
+          ],
+          "properties": {
+            "reportId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            "generatedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "language": {
+              "type": "string",
+              "enum": ["en"]
+            },
+            "reportStatus": {
+              "type": "string",
+              "enum": ["draft"]
+            },
+            "settlementMonth": {
+              "type": "string",
+              "pattern": "^[2-9]\\d{3}-(?:0[1-9]|1[0-2])$"
+            },
+            "settlementPeriod": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["from", "to", "asOf"],
+              "properties": {
+                "from": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                "to": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                "asOf": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "creator": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["artistId", "artistName", "brandName", "displayName"],
+              "properties": {
+                "artistId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                },
+                "artistName": {
+                  "type": ["string", "null"],
+                  "minLength": 1
+                },
+                "brandName": {
+                  "type": ["string", "null"],
+                  "minLength": 1
+                },
+                "displayName": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "currency": {
+              "type": "string",
+              "enum": ["TWD"]
+            },
+            "businessTimezone": {
+              "type": "string",
+              "enum": ["Asia/Taipei"]
+            },
+            "isProvisional": {
+              "type": "boolean"
+            },
+            "financialSummary": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "totalProductSalesCents",
+                "refundsCents",
+                "validSalesCents",
+                "creatorRevenueShareAmountCents",
+                "bankTransferFeeCents",
+                "amountPayableToCreatorCents"
+              ],
+              "properties": {
+                "totalProductSalesCents": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "refundsCents": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "validSalesCents": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "creatorRevenueShareAmountCents": {
+                  "type": ["integer", "null"],
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "bankTransferFeeCents": {
+                  "type": ["integer", "null"],
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "amountPayableToCreatorCents": {
+                  "type": ["integer", "null"],
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              }
+            },
+            "rentals": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "rentalId",
+                  "venueId",
+                  "venueName",
+                  "rentalAmountCents",
+                  "totalProductSalesCents",
+                  "refundsCents",
+                  "validSalesCents",
+                  "creatorRevenueShareAmountCents",
+                  "revenueShares"
+                ],
+                "properties": {
+                  "rentalId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "venueId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "venueName": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "rentalAmountCents": {
+                    "type": ["integer", "null"],
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "totalProductSalesCents": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "refundsCents": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "validSalesCents": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "creatorRevenueShareAmountCents": {
+                    "type": ["integer", "null"],
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "revenueShares": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "creatorCommissionBps",
+                        "platformCommissionBps",
+                        "totalProductSalesCents",
+                        "refundsCents",
+                        "validSalesCents",
+                        "creatorRevenueShareAmountCents"
+                      ],
+                      "properties": {
+                        "creatorCommissionBps": {
+                          "type": ["integer", "null"],
+                          "minimum": 0,
+                          "maximum": 10000
+                        },
+                        "platformCommissionBps": {
+                          "type": ["integer", "null"],
+                          "minimum": 0,
+                          "maximum": 10000
+                        },
+                        "totalProductSalesCents": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "refundsCents": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "validSalesCents": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "creatorRevenueShareAmountCents": {
+                          "type": ["integer", "null"],
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "monthlyProductSalesDetails": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "productId",
+                  "productName",
+                  "sku",
+                  "rentalId",
+                  "venueId",
+                  "unitPriceCents",
+                  "quantitySold",
+                  "salesAmountCents"
+                ],
+                "properties": {
+                  "productId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "productName": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sku": {
+                    "type": ["string", "null"],
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "rentalId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "venueId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "unitPriceCents": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "quantitySold": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "salesAmountCents": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                }
+              }
+            },
+            "lowStockReminder": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["status", "capturedAt", "products", "message"],
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": ["available", "unavailable"]
+                },
+                "capturedAt": {
+                  "type": ["string", "null"],
+                  "format": "date-time"
+                },
+                "products": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "productId",
+                      "productName",
+                      "sku",
+                      "venueId",
+                      "venueName",
+                      "currentStock",
+                      "monthlyQuantitySold"
+                    ],
+                    "properties": {
+                      "productId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                      },
+                      "productName": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "sku": {
+                        "type": ["string", "null"],
+                        "minLength": 1,
+                        "maxLength": 120
+                      },
+                      "venueId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                      },
+                      "venueName": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "currentStock": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "monthlyQuantitySold": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    }
+                  }
+                },
+                "message": {
+                  "type": ["string", "null"],
+                  "minLength": 1
+                }
+              }
+            },
+            "notes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "approval.status",
+    "description": "Read approval history; the Agent cannot approve or reject.",
+    "readOnly": true,
+    "owner": "B4",
+    "input": {
+      "type": "object",
+      "required": ["settlementRunId"],
+      "properties": {
+        "settlementRunId": {
+          "type": "string"
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "required": ["settlementRunId", "status", "events"],
+      "properties": {
+        "settlementRunId": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "documents.search",
+    "description": "Search authorised SOP chunks and return citation-ready evidence; permissions are injected by the server.",
+    "readOnly": true,
+    "owner": "C6",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["query"],
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["query", "evidenceSufficient", "results"],
+      "properties": {
+        "query": {
+          "type": "string"
+        },
+        "evidenceSufficient": {
+          "type": "boolean"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "documentId",
+              "documentVersion",
+              "chunkId",
+              "title",
+              "locator",
+              "excerpt",
+              "content"
+            ],
+            "properties": {
+              "documentId": {
+                "type": "string"
+              },
+              "documentVersion": {
+                "type": "string"
+              },
+              "chunkId": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "locator": {
+                "type": "string"
+              },
+              "excerpt": {
+                "type": "string",
+                "maxLength": 480
+              },
+              "content": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "sales.refunds",
+    "readOnly": true,
+    "owner": "A2/C5",
+    "description": "Plan B monthly refund metrics: read canonical REFUND events for one artist and Taipei month. Returns item units, distinct source transaction count, record count and refunded amount. Does not calculate settlements or save reports. Current month is through server time; earlier months are complete. Uses POST /api/v1/assistant/tools/sales.refunds.",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artistId", "settlementMonth"],
+      "properties": {
+        "artistId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "settlementMonth": {
+          "type": "string",
+          "pattern": "^[2-9]\\d{3}-(?:0[1-9]|1[0-2])$"
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artistId",
+        "settlementMonth",
+        "dataCutoff",
+        "currency",
+        "refundQuantity",
+        "refundTransactionCount",
+        "refundRecordCount",
+        "refundAmountCents"
+      ],
+      "properties": {
+        "artistId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "settlementMonth": {
+          "type": "string",
+          "pattern": "^[2-9]\\d{3}-(?:0[1-9]|1[0-2])$"
+        },
+        "dataCutoff": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "currency": {
+          "type": "string",
+          "enum": ["TWD"]
+        },
+        "refundQuantity": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "refundTransactionCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "refundRecordCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "refundAmountCents": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    }
+  }
+]

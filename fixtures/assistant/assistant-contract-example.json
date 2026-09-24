@@ -1,0 +1,32 @@
+{
+  "request": {
+    "message": "Find the approved SOP guidance for handling a refund."
+  },
+  "response": {
+    "requestId": "REQ-ASSISTANT-001",
+    "answer": "Follow the approved refund procedure in the cited SOP.",
+    "citations": [
+      {
+        "documentId": "DOC-SOP-001",
+        "documentVersion": "VERSION-003",
+        "chunkId": "CHUNK-REFUNDS-002",
+        "title": "Sample Refund Procedure",
+        "locator": "Section 2",
+        "excerpt": "Keep the original sale and record the approved refund as a linked adjustment."
+      }
+    ],
+    "toolCalls": [
+      {
+        "requestId": "REQ-ASSISTANT-001",
+        "tool": "documents.search",
+        "execution": {
+          "status": "succeeded",
+          "argumentsSummary": "Approved SOP search; query text redacted",
+          "resultSummary": "1 approved SOP result",
+          "durationMs": 12
+        }
+      }
+    ],
+    "outcome": "answered"
+  }
+}

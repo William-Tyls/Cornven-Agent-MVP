@@ -1,0 +1,45 @@
+VIEW-ONLY SOURCE LICENSE — PROPRIETARY
+
+Copyright (c) 2026 William-Tyls and the respective contributors.
+All rights reserved by their respective rights holders.
+
+1. Limited permission
+
+A person expressly granted access by the relevant rights holder may view this
+repository solely for inspection and review. This is not an open-source license.
+No right to operate, deploy, or commercially use the software is granted by
+access to the repository alone.
+
+2. Restrictions
+
+Except for temporary copies technically necessary for permitted viewing, or as
+required by applicable law or binding platform terms, no permission is granted
+to copy, fork, modify, create derivative works, distribute, publish, sublicense,
+sell, or otherwise exploit the covered material without prior written permission
+from the relevant rights holder. Authorized maintainers may separately receive
+permission to develop and run the demonstration.
+
+3. Existing and third-party rights
+
+This notice applies only to rights that the relevant contributors are entitled
+to grant. It does not transfer ownership, supersede pre-existing licenses, or
+restrict rights already granted under another applicable license. Dependencies,
+customer documents, trademarks, and other third-party material remain subject
+to their respective ownership, notices, and permissions. Repository access does
+not grant a right to reuse customer material or access production systems.
+
+4. Hosting-platform terms
+
+This notice does not override GitHub's Terms of Service or promise a technical
+ability to prevent copying or forking. In particular, publishing a repository
+publicly on GitHub grants other users certain viewing and forking rights under
+GitHub's terms. Keep restricted material in a private repository and use the
+access and fork controls available for that repository.
+
+5. Demonstration software; no warranty
+
+The software is a demonstration prototype and is not connected to the client's
+production POS database. It is provided "AS IS", without warranty of any kind,
+express or implied, to the extent permitted by applicable law. The respective
+rights holders are not liable for claims or damages arising from its use to the
+extent permitted by applicable law.

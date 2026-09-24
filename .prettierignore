@@ -1,0 +1,31 @@
+node_modules
+dist
+coverage
+pnpm-lock.yaml
+data/rag/sources/*.md
+data/rag/sources.json
+
+.local
+
+# Byte-frozen evaluation inputs; hashes validated by the evaluator.
+fixtures/rag/retrieval-quality.json
+fixtures/rag/retrieval-tuning.json
+fixtures/rag/answer-quality.json
+fixtures/rag/retrieval-calibration-v2.json
+
+# OpenSpec-generated agent instructions are managed by openspec update.
+.agents/skills/openspec-*/**
+
+# Deterministic source sidecars and frozen expanded fixtures, verified by hashes.
+data/rag/structure/*.json
+fixtures/rag/retrieval-english.json
+fixtures/rag/source-completeness.json
+fixtures/rag/trilingual-tuning.json
+fixtures/rag/expanded-evaluation-manifest.json
+
+# Private downloaded Notion snapshots and original assets.
+/* _ Notion.html
+/* _ Notion_files/
+/Cornven*.pdf
+/43029e48-03ac-4e63-8942-3fd6038761b1.webp
+/aff98bbc-5124-456f-80b7-a47f030c4dd7.webp

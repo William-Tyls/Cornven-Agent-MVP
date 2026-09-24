@@ -1,0 +1,39 @@
+{
+  "name": "@cornven/database",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "prisma:generate": "prisma generate",
+    "prisma:validate": "prisma validate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "tsx prisma/seed.ts",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:verify": "tsx prisma/verify.ts"
+  },
+  "dependencies": {
+    "@cornven/contracts": "workspace:*",
+    "@prisma/client": "6.14.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.18.0",
+    "prisma": "6.14.0",
+    "tsx": "4.20.5",
+    "typescript": "5.9.2",
+    "vitest": "3.2.4"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
+}

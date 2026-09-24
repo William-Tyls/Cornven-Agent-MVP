@@ -1,0 +1,136 @@
+{
+  "description": "Synthetic TWD cross-month refund: August original sale and October refund use the original 85% platform-rate snapshot.",
+  "input": {
+    "artistId": "ART-001",
+    "artistName": "Sample Artist",
+    "brandName": "Sample Artist",
+    "settlementMonth": "2026-10",
+    "asOf": "2026-10-31T15:59:59.999Z",
+    "businessTimezone": "Asia/Taipei",
+    "currency": "TWD",
+    "sales": [
+      {
+        "recordType": "refund",
+        "sourceRecordId": "SRC-REFUND-CROSS-MONTH-001",
+        "sourceTransactionId": "TX-REFUND-CROSS-MONTH-001",
+        "parentTransactionId": "TX-SALE-CROSS-MONTH-001",
+        "artistId": "ART-001",
+        "artistName": "Sample Artist",
+        "venueId": "VENUE-001",
+        "venueName": "Cornven Sample Venue",
+        "productId": "PROD-001",
+        "sku": "SKU-A-001",
+        "productName": "Sample Ceramic Cup",
+        "soldAt": "2026-10-03T04:00:00.000Z",
+        "quantitySold": -1,
+        "unitPriceCents": 5000,
+        "grossSalesCents": -5000,
+        "sourceCommissionAmountCents": -4250,
+        "sourceTenantAmountCents": -750,
+        "rentalId": "RENTAL-001",
+        "rentalCommissionBps": 8500,
+        "cubeId": "CUBE-001",
+        "cubeCommissionBps": 2500,
+        "currency": "TWD"
+      }
+    ],
+    "historicalRecords": [
+      {
+        "recordType": "sale",
+        "sourceRecordId": "SRC-SALE-CROSS-MONTH-001",
+        "sourceTransactionId": "TX-SALE-CROSS-MONTH-001",
+        "parentTransactionId": null,
+        "artistId": "ART-001",
+        "artistName": "Sample Artist",
+        "venueId": "VENUE-001",
+        "venueName": "Cornven Sample Venue",
+        "productId": "PROD-001",
+        "sku": "SKU-A-001",
+        "productName": "Sample Ceramic Cup",
+        "soldAt": "2026-08-20T04:00:00.000Z",
+        "quantitySold": 2,
+        "unitPriceCents": 5000,
+        "grossSalesCents": 10000,
+        "sourceCommissionAmountCents": 8500,
+        "sourceTenantAmountCents": 1500,
+        "rentalId": "RENTAL-001",
+        "rentalCommissionBps": 8500,
+        "cubeId": "CUBE-001",
+        "cubeCommissionBps": 2500,
+        "currency": "TWD"
+      }
+    ],
+    "rentals": [
+      {
+        "rentalId": "RENTAL-001",
+        "venueId": "VENUE-001",
+        "venueName": "Cornven Sample Venue",
+        "effectiveFrom": "2026-05-16T00:00:00+08:00",
+        "effectiveTo": null,
+        "monthlyRentCents": 300000
+      }
+    ],
+    "bankTransferFeeCents": null,
+    "inventory": null
+  },
+  "expected": {
+    "totalProductSalesCents": 0,
+    "refundsCents": 5000,
+    "validSalesCents": -5000,
+    "creatorRevenueShareAmountCents": -750,
+    "settlementMonth": "10/2026",
+    "creator": {
+      "artistId": "ART-001",
+      "artistName": "Sample Artist",
+      "brandName": "Sample Artist"
+    },
+    "venues": [
+      {
+        "venueId": "VENUE-001",
+        "venueName": "Cornven Sample Venue"
+      }
+    ],
+    "settlementPeriod": {
+      "from": "2026-10-01",
+      "to": "2026-10-31",
+      "asOf": "2026-10-31T15:59:59.999Z"
+    },
+    "currency": "TWD",
+    "businessTimezone": "Asia/Taipei",
+    "isProvisional": true,
+    "rentals": [
+      {
+        "totalProductSalesCents": 0,
+        "refundsCents": 5000,
+        "validSalesCents": -5000,
+        "creatorRevenueShareAmountCents": -750,
+        "rentalId": "RENTAL-001",
+        "venueId": "VENUE-001",
+        "venueName": "Cornven Sample Venue",
+        "rentalAmountCents": 300000,
+        "revenueShares": [
+          {
+            "totalProductSalesCents": 0,
+            "refundsCents": 5000,
+            "validSalesCents": -5000,
+            "creatorRevenueShareAmountCents": -750,
+            "creatorCommissionBps": 1500,
+            "platformCommissionBps": 8500
+          }
+        ]
+      }
+    ],
+    "bankTransferFeeCents": null,
+    "amountPayableToCreatorCents": null,
+    "monthlyProductSalesDetails": [],
+    "lowStockReminder": {
+      "status": "unavailable",
+      "capturedAt": null,
+      "products": [],
+      "message": "Inventory data unavailable or incomplete"
+    },
+    "notes": ["Bank transfer fee is unconfirmed; amount payable is unavailable."]
+  },
+  "calculation": "October has no SALE and one TWD 5000 refund. M3 uses the historical August SALE snapshot: platform rate 8500 bps, derived creator rate 1500 bps. -5000 × 1500 / 10000 = -750 cents. Bank fee is unconfirmed, so final payable remains null.",
+  "status": "M2 MonthlyReportContextProvider acceptance fixture for M3 calculation and M4 report integration."
+}

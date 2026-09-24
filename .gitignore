@@ -1,0 +1,27 @@
+node_modules/
+dist/
+coverage/
+.DS_Store
+.env
+.env.*
+!.env.example
+*.log
+.pnpm-store/
+.turbo/
+apps/web/.vite/
+packages/database/prisma/dev.db*
+*.tsbuildinfo
+
+# Local report PDF storage (configured via REPORT_STORAGE_PATH)
+/data/reports/
+.local/
+reports/
+playwright-report/
+test-results/
+
+# Private downloaded Notion snapshots and original assets.
+/* _ Notion.html
+/* _ Notion_files/
+/Cornven*.pdf
+/43029e48-03ac-4e63-8942-3fd6038761b1.webp
+/aff98bbc-5124-456f-80b7-a47f030c4dd7.webp

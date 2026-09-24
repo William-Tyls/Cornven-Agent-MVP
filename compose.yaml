@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg15
+    environment:
+      POSTGRES_USER: cornven
+      POSTGRES_PASSWORD: cornven_local
+      POSTGRES_DB: cornven
+      TZ: Asia/Taipei
+    ports:
+      - '5433:5432'
+    volumes:
+      - cornven_postgres15_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U cornven -d cornven']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  db-init:
+    image: node:22-slim
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+      - db_init_node_modules:/workspace/node_modules
+    environment:
+      DATABASE_URL: postgresql://cornven:cornven_local@postgres:5432/cornven?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "
+        apt-get update && apt-get install -y --no-install-recommends postgresql-client > /dev/null &&
+        corepack enable &&
+        PGPASSWORD=cornven_local psql -h postgres -U cornven -d cornven -c 'CREATE EXTENSION IF NOT EXISTS vector;' &&
+        CI=true pnpm install --frozen-lockfile &&
+        pnpm db:generate &&
+        pnpm db:migrate:deploy &&
+        pnpm db:seed &&
+        pnpm db:verify
+      "
+
+volumes:
+  cornven_postgres15_data:
+  db_init_node_modules:

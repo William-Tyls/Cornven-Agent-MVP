@@ -1,0 +1,61 @@
+{
+  "name": "cornven-mvp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Public synthetic-data demo; not connected to the client production POS database.",
+  "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @cornven/api --filter @cornven/web dev",
+    "build": "pnpm -r --if-present build",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm build && pnpm test:run",
+    "test:run": "pnpm -r --if-present test",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "contracts:check": "node scripts/validate-contracts.mjs",
+    "db:generate": "pnpm --filter @cornven/database prisma:generate",
+    "db:validate": "node scripts/validate-prisma.mjs",
+    "db:migrate": "pnpm --filter @cornven/database prisma:migrate",
+    "db:seed": "pnpm --filter @cornven/database prisma:seed",
+    "db:migrate:deploy": "pnpm --filter @cornven/database prisma:migrate:deploy",
+    "db:verify": "pnpm --filter @cornven/database prisma:verify",
+    "quality": "pnpm format:check && pnpm lint && pnpm contracts:check && pnpm db:validate && pnpm typecheck && pnpm build && pnpm test:run && pnpm rag:check:public",
+    "local:setup": "node scripts/local-db.mjs",
+    "local:start": "node scripts/local-start.mjs",
+    "test:reports:db": "node scripts/local-db.mjs --test",
+    "local:tasks": "node scripts/local-report-tasks.mjs",
+    "test:reports:browser": "pnpm build && node scripts/local-browser-check.mjs",
+    "local:seed:september": "pnpm build && node scripts/seed-september-demo.mjs",
+    "rag:check": "pnpm --filter @cornven/api rag:check",
+    "rag:index": "pnpm db:generate && pnpm --filter @cornven/database build && pnpm --filter @cornven/api rag:index",
+    "rag:refresh-checksums": "node scripts/refresh-rag-checksums.mjs",
+    "test:imports:db": "node scripts/local-db.mjs --import-test",
+    "local:prepare-demo": "pnpm local:setup && pnpm local:seed:september && node scripts/prepare-planb-demo.mjs",
+    "rag:evaluate": "pnpm --filter @cornven/api rag:evaluate",
+    "rag:index:memory": "pnpm --filter @cornven/api rag:index:memory",
+    "rag:evaluate:live": "pnpm --filter @cornven/api rag:evaluate:live",
+    "rag:evaluate:completeness": "pnpm --filter @cornven/api rag:evaluate:completeness",
+    "rag:evaluate:topk": "pnpm --filter @cornven/api rag:evaluate:topk",
+    "rag:evaluate:topk:live": "pnpm --filter @cornven/api rag:evaluate:topk:live",
+    "quality:private": "pnpm format:check && pnpm lint && pnpm contracts:check && pnpm rag:source-audit && python3 scripts/rag/test_preparation.py && pnpm rag:check && pnpm rag:evaluate && pnpm rag:evaluate:completeness && pnpm db:validate && pnpm typecheck && pnpm build && pnpm test:run",
+    "rag:check:public": "node scripts/check-public-rag.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.34.0",
+    "eslint": "9.34.0",
+    "globals": "16.3.0",
+    "prettier": "3.6.2",
+    "typescript": "5.9.2",
+    "typescript-eslint": "8.41.0",
+    "yaml": "2.8.1"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/William-Tyls/Cornven-Agent-MVP.git"
+  }
+}

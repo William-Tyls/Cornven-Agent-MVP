@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "sourceFile": "synthetic-public-demo",
+  "documents": [
+    {
+      "sourceId": "public-demo",
+      "title": "Public demo guide / 公开演示说明",
+      "file": "sources/public-demo.md",
+      "sourceType": "notion_docx_export",
+      "sourceUrl": "https://github.com/William-Tyls/Cornven-Agent-MVP/blob/main/data/rag/sources/public-demo.md",
+      "sourceVersion": "public-demo-v1",
+      "retrievalStatus": "active",
+      "contentStatus": "synthetic_demo_not_customer_content",
+      "audience": "creator_facing",
+      "permissionTags": [
+        "staff",
+        "creator"
+      ],
+      "checksum": "3979418196b90eb42d7c5f2754cc389d011a70ebe6407a9a210cac7d2f39e6f0"
+    }
+  ]
+}

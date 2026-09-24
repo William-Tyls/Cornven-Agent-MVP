@@ -1,0 +1,4 @@
+recordType,sourceRecordId,sourceTransactionId,parentTransactionId,artistId,artistName,venueId,venueName,productId,sku,productName,occurredAt,quantity,unitPrice,totalAmount,commissionAmount,tenantAmount,rentalId,rentalCommissionRate,cubeId,cubeCommissionRate,currency
+sale,SRC-SALE-001,TX-001,,ART-001,Sample Artist,VENUE-001,Cornven Sample Venue,PROD-001,SKU-A-001,Sample Ceramic Cup,2026-08-05T02:15:00.000Z,4,50.00,200.00,50.00,150.00,RENTAL-001,0.20,CUBE-001,0.25,AUD
+refund,SRC-REFUND-001,TX-REFUND-001,TX-001,ART-001,Sample Artist,VENUE-001,Cornven Sample Venue,PROD-001,SKU-A-001,Sample Ceramic Cup,2026-08-12T07:30:00.000Z,-1,50.00,-50.00,-12.50,-37.50,RENTAL-001,0.20,CUBE-001,0.25,AUD
+exchange,SRC-EXCHANGE-001,TX-EXCHANGE-001,TX-001,ART-001,Sample Artist,VENUE-001,Cornven Sample Venue,PROD-001,SKU-A-001,Sample Ceramic Cup,2026-08-15T01:00:00.000Z,1,,,,,,,,,AUD

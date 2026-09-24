@@ -1,0 +1,31 @@
+name: cornven-plan-b
+services:
+  mailpit:
+    image: axllent/mailpit@sha256:74d609a42ec279aa63c6b4622a6fa9b5408d1ad5b1d76a1c4be40a265ce0863d
+    ports:
+      - '127.0.0.1:51025:1025'
+      - '127.0.0.1:58025:8025'
+    environment:
+      MP_DATABASE: /data/mailpit.db
+      MP_MAX_MESSAGES: 5000
+    volumes:
+      - local_report_mail:/data
+  postgres:
+    image: pgvector/pgvector:pg15
+    environment:
+      POSTGRES_USER: cornven_planb
+      POSTGRES_PASSWORD: mock_only_local
+      POSTGRES_DB: cornven_planb
+      TZ: Asia/Taipei
+    ports:
+      - '127.0.0.1:55449:5432'
+    volumes:
+      - local_report_database:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U cornven_planb -d cornven_planb']
+      interval: 2s
+      timeout: 3s
+      retries: 20
+volumes:
+  local_report_mail:
+  local_report_database:

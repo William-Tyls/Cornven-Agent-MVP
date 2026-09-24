@@ -1,0 +1,47 @@
+{
+  "name": "@cornven/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/server.js",
+  "scripts": {
+    "predev": "pnpm --filter @cornven/contracts build",
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "prerag:check": "pnpm --filter @cornven/contracts build",
+    "rag:check": "node --import tsx src/modules/documents/check-documents.ts",
+    "prerag:index": "pnpm --filter @cornven/contracts build && pnpm --filter @cornven/database build",
+    "rag:index": "node --import tsx src/modules/documents/index-documents.ts",
+    "rag:evaluate": "node --import tsx src/modules/documents/evaluate-quality-cli.ts",
+    "rag:index:memory": "node --import tsx src/modules/documents/index-memory.ts",
+    "rag:evaluate:live": "node --import tsx src/modules/documents/evaluate-live-cli.ts",
+    "rag:evaluate:completeness": "node --import tsx src/modules/documents/evaluate-completeness-cli.ts",
+    "rag:evaluate:topk": "node --import tsx src/modules/documents/evaluate-topk-cli.ts",
+    "rag:evaluate:topk:live": "node --import tsx src/modules/documents/evaluate-topk-live-cli.ts"
+  },
+  "dependencies": {
+    "@cornven/contracts": "workspace:*",
+    "@cornven/database": "workspace:*",
+    "cors": "2.8.5",
+    "csv-parse": "^7.0.2",
+    "express": "5.1.0",
+    "nodemailer": "10.0.10",
+    "opencc-js": "1.4.2",
+    "puppeteer": "25.10.0",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/cors": "2.8.19",
+    "@types/express": "5.0.3",
+    "@types/node": "22.18.0",
+    "@types/nodemailer": "8.0.2",
+    "@types/supertest": "6.0.3",
+    "supertest": "7.1.4",
+    "tsx": "4.20.5",
+    "typescript": "5.9.2",
+    "vitest": "3.2.4"
+  }
+}

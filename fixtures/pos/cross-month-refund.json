@@ -1,0 +1,52 @@
+{
+  "commissionRateUnit": "fraction",
+  "records": [
+    {
+      "recordType": "sale",
+      "sourceRecordId": "SRC-SALE-CROSS-MONTH-001",
+      "sourceTransactionId": "TX-SALE-CROSS-MONTH-001",
+      "artistId": "ART-001",
+      "artistName": "Sample Artist",
+      "venueId": "VENUE-001",
+      "venueName": "Cornven Sample Venue",
+      "productId": "PROD-001",
+      "sku": "SKU-A-001",
+      "productName": "Sample Ceramic Cup",
+      "occurredAt": "2026-08-20T04:00:00.000Z",
+      "quantity": 2,
+      "unitPrice": "50.00",
+      "totalAmount": "100.00",
+      "commissionAmount": "85.00",
+      "tenantAmount": "15.00",
+      "rentalId": "RENTAL-001",
+      "rentalCommissionRate": "0.85",
+      "cubeId": "CUBE-001",
+      "cubeCommissionRate": "0.25",
+      "currency": "TWD"
+    },
+    {
+      "recordType": "refund",
+      "sourceRecordId": "SRC-REFUND-CROSS-MONTH-001",
+      "sourceTransactionId": "TX-REFUND-CROSS-MONTH-001",
+      "parentTransactionId": "TX-SALE-CROSS-MONTH-001",
+      "artistId": "ART-001",
+      "artistName": "Sample Artist",
+      "venueId": "VENUE-001",
+      "venueName": "Cornven Sample Venue",
+      "productId": "PROD-001",
+      "sku": "SKU-A-001",
+      "productName": "Sample Ceramic Cup",
+      "occurredAt": "2026-10-03T04:00:00.000Z",
+      "quantity": -1,
+      "unitPrice": "50.00",
+      "totalAmount": "-50.00",
+      "commissionAmount": "-42.50",
+      "tenantAmount": "-7.50",
+      "rentalId": "RENTAL-001",
+      "rentalCommissionRate": "0.85",
+      "cubeId": "CUBE-001",
+      "cubeCommissionRate": "0.25",
+      "currency": "TWD"
+    }
+  ]
+}
